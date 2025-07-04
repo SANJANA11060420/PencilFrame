@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to Sketch Converter</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --success-color: #28a745;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-section, .result-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        h2 {
+            color: var(--secondary-color);
+            margin-top: 0;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 6px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--accent-color);
+            background-color: rgba(79, 195, 247, 0.05);
+        }
+        
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-process {
+            background-color: var(--success-color);
+        }
+        
+        .btn-process:hover {
+            background-color: #218838;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 400px;
+            display: block;
+            margin: 1rem auto;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .how-it-works {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-top: 2rem;
+        }
+        
+        .steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .step {
+            flex: 1;
+            min-width: 200px;
+            padding: 1rem;
+            background: rgba(79, 195, 247, 0.1);
+            border-radius: 6px;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .step-number {
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1.5rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PencilFrame</h1>
+            <p class="tagline">Transform your photos into beautiful pencil sketches</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="content">
+            <div class="upload-section">
+                <h2>Upload Image</h2>
+                <div class="upload-area" id="upload-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to browse or drag and drop your image here</p>
+                    <input type="file" id="file-input" accept="image/*">
+                </div>
+                <button id="process-btn" class="btn btn-process" disabled>Process Image</button>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Processing your image...</p>
+                </div>
+                
+                <div id="original-preview-container" style="display: none;">
+                    <h3>Original Image</h3>
+                    <img id="original-preview" class="image-preview" src="#" alt="Original Image">
+                </div>
+            </div>
+            
+            <div class="result-section">
+                <h2>Sketch Result</h2>
+                <div id="result-placeholder">
+                    <p>Your sketch will appear here after processing</p>
+                    <img src="https://via.placeholder.com/400x300?text=Sketch+Result" class="image-preview" alt="Sketch Placeholder">
+                </div>
+                <div id="result-container" style="display: none;">
+                    <img id="result-image" class="image-preview" src="#" alt="Sketch Result">
+                    <a id="download-btn" class="btn" download="sketch.jpg">
+                        <i class="fas fa-download"></i> Download Sketch
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="how-it-works">
+            <h2>How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1. Upload</div>
+                    <p>Select an image from your device or drag and drop it into the upload area.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2. Process</div>
+                    <p>Click the "Process Image" button to convert your photo into a sketch.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3. Download</div>
+                    <p>Save your beautiful sketch to your device with the download button.</p>
+                </div>
+            </div>
+            
+            <h3 style="margin-top: 2rem;">Technical Details</h3>
+            <p>This application uses advanced image processing techniques to convert your photos into sketches:</p>
+            <ul>
+                <li>Converts the image to grayscale using luminance preservation</li>
+                <li>Applies Gaussian blur for smooth edges</li>
+                <li>Uses the dodge blending technique to create the sketch effect</li>
+                <li>Optimizes the result for a natural pencil sketch appearance</li>
+            </ul>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>Image to Sketch Converter &copy; 2023 | Powered by Python, NumPy, and OpenCV</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            const processBtn = document.getElementById('process-btn');
+            const originalPreview = document.getElementById('original-preview');
+            const originalPreviewContainer = document.getElementById('original-preview-container');
+            const resultImage = document.getElementById('result-image');
+            const resultContainer = document.getElementById('result-container');
+            const resultPlaceholder = document.getElementById('result-placeholder');
+            const loading = document.getElementById('loading');
+            const downloadBtn = document.getElementById('download-btn');
+            
+            let selectedFile = null;
+            
+            // Handle file selection
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    selectedFile = e.target.files[0];
+                    displayOriginalImage(selectedFile);
+                    processBtn.disabled = false;
+                }
+            });
+            
+            // Handle drag and drop
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#4a6fa5';
+                uploadArea.style.backgroundColor = 'rgba(74, 111, 165, 0.1)';
+            });
+            
+            uploadArea.addEventListener('dragleave', function() {
+                uploadArea.style.borderColor = '#ccc';
+                uploadArea.style.backgroundColor = '';
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#ccc';
+                uploadArea.style.backgroundColor = '';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    selectedFile = e.dataTransfer.files[0];
+                    fileInput.files = e.dataTransfer.files;
+                    displayOriginalImage(selectedFile);
+                    processBtn.disabled = false;
+                }
+            });
+            
+            // Process image button
+            processBtn.addEventListener('click', function() {
+                if (selectedFile) {
+                    processImage(selectedFile);
+                }
+            });
+            
+            // Display the selected image
+            function displayOriginalImage(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    originalPreview.src = e.target.result;
+                    originalPreviewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // Process the image (this would be replaced with actual API call in production)
+            function processImage(file) {
+                loading.style.display = 'block';
+                processBtn.disabled = true;
+                
+                // Simulate processing delay
+                setTimeout(function() {
+                    // In a real app, you would send the image to your Python backend here
+                    // For this demo, we'll just use a placeholder
+                    
+                    loading.style.display = 'none';
+                    resultPlaceholder.style.display = 'none';
+                    resultContainer.style.display = 'block';
+                    
+                    // For demo purposes, we'll just invert the colors of the original image
+                    // In a real implementation, you would get the processed image from your Python script
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    
+                    img.onload = function() {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        
+                        // Apply a simple filter to simulate sketch (replace with actual API call)
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const data = imageData.data;
+                        
+                        for (let i = 0; i < data.length; i += 4) {
+                            // Simple grayscale conversion
+                            const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                            data[i] = data[i + 1] = data[i + 2] = avg;
+                            
+                            // Simple inversion to simulate sketch effect
+                            data[i] = data[i + 1] = data[i + 2] = 255 - data[i];
+                        }
+                        
+                        ctx.putImageData(imageData, 0, 0);
+                        resultImage.src = canvas.toDataURL('image/jpeg');
+                        downloadBtn.href = canvas.toDataURL('image/jpeg');
+                    };
+                    
+                    img.src = URL.createObjectURL(file);
+                    
+                }, 1500); // Simulate 1.5 second processing time
+            }
+        });
+    </script>
+</body>
+</html>
